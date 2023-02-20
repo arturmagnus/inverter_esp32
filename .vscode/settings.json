@@ -1,0 +1,27 @@
+{
+    "files.associations": {
+        "mcpwm.h": "c",
+        "freertos.h": "c",
+        "ledc.h": "c",
+        "esp_compiler.h": "c",
+        "*.inc": "c",
+        "sine_table.h": "c",
+        "esp_err.h": "c",
+        "mcpwm_cmpr.h": "c",
+        "mcpwm_types.h": "c",
+        "mcpwm_gen.h": "c",
+        "soc_caps.h": "c",
+        "clk_tree_defs.h": "c",
+        "gpio.h": "c",
+        "esp_intr_alloc.h": "c",
+        "task.h": "c",
+        "mcpwm_prelude.h": "c",
+        "typeinfo": "c",
+        "esp_timer.h": "c",
+        "semphr.h": "c",
+        "esp_log.h": "c",
+        "queue.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled",
+    "idf.adapterTargetName": "esp32"
+}

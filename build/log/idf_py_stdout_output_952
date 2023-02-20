@@ -1,0 +1,18 @@
+[1/9] Performing build step for 'bootloader'
+[1/1] cmd.exe /C "cd /D C:\esp\esp-idf\frameworks\esp-idf-v5.0\examples\peripherals\ledc\ledc_fade\build\bootloader\esp-idf\esptool_py && C:\esp\esp-idf\python_env\idf5.0_py3.8_env\Scripts\python.exe C:/esp/esp-idf/frameworks/esp-idf-v5.0/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x1000 C:/esp/esp-idf/frameworks/esp-idf-v5.0/examples/peripherals/ledc/ledc_fade/build/bootloader/bootloader.bin"
+Bootloader binary size 0x6710 bytes. 0x8f0 bytes (8%) free.
+[2/7] Building C object esp-idf/main/CMakeFiles/__idf_main.dir/ledc_fade_example_main.c.obj
+C:/esp/esp-idf/frameworks/esp-idf-v5.0/examples/peripherals/ledc/ledc_fade/main/ledc_fade_example_main.c:60:12: warning: 'TIMER_CMPA' defined but not used [-Wunused-variable]
+   60 | static int TIMER_CMPA = 0;
+      |            ^~~~~~~~~~
+[3/7] Linking C static library esp-idf\main\libmain.a
+[4/7] Generating ld/sections.ld
+[5/7] Linking CXX executable ledc_fade.elf
+[6/7] Generating binary image from built executable
+esptool.py v4.5
+Creating esp32 image...
+Merged 2 ELF sections
+Successfully created esp32 image.
+Generated C:/esp/esp-idf/frameworks/esp-idf-v5.0/examples/peripherals/ledc/ledc_fade/build/ledc_fade.bin
+[7/7] cmd.exe /C "cd /D C:\esp\esp-idf\frameworks\esp-idf-v5.0\examples\peripherals\ledc\ledc_fade\build\esp-idf\esptool_py && C:\esp\esp-idf\python_env\idf5.0_py3.8_env\Scripts\python.exe C:/esp/esp-idf/frameworks/esp-idf-v5.0/components/partition_table/check_sizes.py --offset 0x8000 partition --type app C:/esp/esp-idf/frameworks/esp-idf-v5.0/examples/peripherals/ledc/ledc_fade/build/partition_table/partition-table.bin C:/esp/esp-idf/frameworks/esp-idf-v5.0/examples/peripherals/ledc/ledc_fade/build/ledc_fade.bin"
+ledc_fade.bin binary size 0x30940 bytes. Smallest app partition is 0x100000 bytes. 0xcf6c0 bytes (81%) free.
