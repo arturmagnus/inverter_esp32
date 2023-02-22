@@ -1,4 +1,4 @@
-# Install script for directory: C:/esp/esp-idf/frameworks/esp-idf-v5.0/examples/peripherals/ledc/ledc_fade/main
+# Install script for directory: C:/inverter_esp32/main
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

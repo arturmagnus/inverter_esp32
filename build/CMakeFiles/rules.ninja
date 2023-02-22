@@ -1324,7 +1324,7 @@ rule C_STATIC_LIBRARY_LINKER____idf_main_
 # Rule for re-running cmake.
 
 rule RERUN_CMAKE
-  command = C:\esp\esp-idf\tools\cmake\3.24.0\bin\cmake.exe --regenerate-during-build -SC:\esp\esp-idf\frameworks\esp-idf-v5.0\examples\peripherals\ledc\ledc_fade -BC:\esp\esp-idf\frameworks\esp-idf-v5.0\examples\peripherals\ledc\ledc_fade\build
+  command = C:\esp\esp-idf\tools\cmake\3.24.0\bin\cmake.exe --regenerate-during-build -SC:\inverter_esp32 -BC:\inverter_esp32\build
   description = Re-running CMake...
   generator = 1
 

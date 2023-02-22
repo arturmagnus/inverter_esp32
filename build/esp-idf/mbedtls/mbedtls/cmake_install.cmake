@@ -39,9 +39,9 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("C:/esp/esp-idf/frameworks/esp-idf-v5.0/examples/peripherals/ledc/ledc_fade/build/esp-idf/mbedtls/mbedtls/include/cmake_install.cmake")
-  include("C:/esp/esp-idf/frameworks/esp-idf-v5.0/examples/peripherals/ledc/ledc_fade/build/esp-idf/mbedtls/mbedtls/3rdparty/cmake_install.cmake")
-  include("C:/esp/esp-idf/frameworks/esp-idf-v5.0/examples/peripherals/ledc/ledc_fade/build/esp-idf/mbedtls/mbedtls/library/cmake_install.cmake")
+  include("C:/inverter_esp32/build/esp-idf/mbedtls/mbedtls/include/cmake_install.cmake")
+  include("C:/inverter_esp32/build/esp-idf/mbedtls/mbedtls/3rdparty/cmake_install.cmake")
+  include("C:/inverter_esp32/build/esp-idf/mbedtls/mbedtls/library/cmake_install.cmake")
 
 endif()
 

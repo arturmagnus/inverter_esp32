@@ -1,4 +1,4 @@
-/* * Data converted from C:/esp/esp-idf/frameworks/esp-idf-v5.0/examples/peripherals/ledc/ledc_fade/build/esp-idf/mbedtls/x509_crt_bundle
+/* * Data converted from C:/inverter_esp32/build/esp-idf/mbedtls/x509_crt_bundle
  */
 .data
 .section .rodata.embedded

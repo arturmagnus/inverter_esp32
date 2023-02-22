@@ -1,8 +1,8 @@
 {
     "project_name":       "bootloader",
     "project_path":       "C:/esp/esp-idf/frameworks/esp-idf-v5.0/components/bootloader/subproject",
-    "build_dir":          "C:/esp/esp-idf/frameworks/esp-idf-v5.0/examples/peripherals/ledc/ledc_fade/build/bootloader",
-    "config_file":        "C:/esp/esp-idf/frameworks/esp-idf-v5.0/examples/peripherals/ledc/ledc_fade/sdkconfig",
+    "build_dir":          "C:/inverter_esp32/build/bootloader",
+    "config_file":        "C:/inverter_esp32/sdkconfig",
     "config_defaults":    "",
     "app_elf":            "bootloader.elf",
     "app_bin":            "bootloader.bin",
