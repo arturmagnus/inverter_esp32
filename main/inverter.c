@@ -6,7 +6,7 @@
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
 */
-
+#include <math.h>
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -20,27 +20,21 @@
 #include "driver/gpio.h"
 #include "sine_table.h"
 
-//USER INPUTS: MODULATION INDEX AND DEADTIME
+//USER INPUTS: MODULATION INDEX, DEADTIME, MODULATED SIGNAL FREQUENCY AND NUMBER OF POINTS 
 #define CUSTOM_DEADTIME 5 // In TIMER_TICKS, 100 ns per tick
 #define DEFAULT_MF 30     // In *of LINE_FREQ   
-
-#define EXAMPLE_TIMER_RESOLUTION_HZ 10000000 // 10MHz, 0.1us per TIMER_TICK
 #define LINE_FREQ 60                        // In Hz
 #define NUMBER_OF_POINTS 111
+
+#define EXAMPLE_TIMER_RESOLUTION_HZ 10000000 // 10MHz, 0.1us per TIMER_TICK
 #define DEFAULT_FS (LINE_FREQ * DEFAULT_MF) // In Hz
 
 #define UPDATE_LOOP_PERIOD_US 150 // 1/(111*60) us, 111 points and 60hz base frequency
 
-//#define UPDATE_LOOP_PERIOD_S (1 / (10 * LINE_FREQ * NUMBER_OF_POINTS))
-//#define UPDATE_LOOP_PERIOD_US ((int)EXAMPLE_TIMER_RESOLUTION_HZ * UPDATE_LOOP_PERIOD_S) => 
-//Explanation on my notebook:
-//This should result in 150us but something is wrong, so the update loop period is fix for 111 points.
-//The period should be 1/LINE_FREQ*NUMBER_OF_POINTS, because in 1/LINE_FREQ seconds, i should display all of my NUMBER_OF_POINTS values of CMPA
-//So, the period in US should be 10000000*1/(10*LINE_FREQ*NUMER_OF_POINTS) (10TICKS=1US)
+#define _2PI 6.2831853072
 
 #define TIMER_PERIOD ((int)EXAMPLE_TIMER_RESOLUTION_HZ / (DEFAULT_FS)) 
-// 1000 ticks = 0.1ms
-// the period should relate to default FS,
+// MCPWM TIMER: 1000 ticks = 0.1ms
 
 #define K_MOD (TIMER_PERIOD / 400)
 //Peak of carrier = TIMER_PERIOD/2, Peak of Modulated sinusoid = 200, with this gain we gek a sinusoid going from 0 to TIMER_PERIOD/2
@@ -54,7 +48,7 @@
 #define PWM_WH_GPIO 17
 #define PWM_WL_GPIO 16
 
-//Pin connected to ESP32 datalogger, 1 means Tjunction overtemperature
+//Pin connected to ESP32 datalogger, 1 means Tjunction overtemperature, NOT IMPLEMENTED
 #define TEMP_FAULT_GPIO 23
 
 #define MCPWM_OP_INDEX_U 0
@@ -66,30 +60,64 @@
 
 static const char *TAG = "Inverter";
 
+//Global variables
 static int TIMER_CMPA[3] = {0, 0, 0};
 static int update_duty_flag = 0;
 static int index = 0;
+int update_prd_us = 0;
+
+static void calc_update_loop_period(int frequency, int number_of_points){     
+    //Explanation on my notebook:
+    //The update period should be 1/LINE_FREQ*NUMBER_OF_POINTS, because in 1/LINE_FREQ seconds, i should display all of my NUMBER_OF_POINTS values of CMPA.
+    //So, the period in US should be 10000000*1/(LINE_FREQ*NUMER_OF_POINTS)
+
+    update_prd_us = 1000000*(1.0/(frequency*number_of_points));
+
+    ESP_LOGI(TAG, "Update loop calculated period: %i us", update_prd_us);
+}
+
+static void fill_sine_table(int number_of_points){
+    //local index
+    int index = 0;
+    for(index=0; index<number_of_points; index++){
+        test_sine_tableA[index]=(int)(K_MOD*100*(1+sin((_2PI/number_of_points)*index)));
+        test_sine_tableB[index]=(int)(K_MOD*100*(1+sin((_2PI/number_of_points)*index-2.094395102)));
+        test_sine_tableC[index]=(int)(K_MOD*100*(1+sin((_2PI/number_of_points)*index+2.094395102)));
+        ESP_LOGI(TAG, "Sine table point number %i\n absolute value: %i ",index, test_sine_tableA[index]);
+    }
+}
 
 static void mcpwm_update_TIMER_CMPA(void *args)
 {
     // Once each UPDATE_LOOP_PRD_US we increase the index of a modulated sine-wave. Because we have 111 points, for a 60hz sinewave, the UPDATE_PRD should be
     // 1/111*60, wich is the calculated by the initial defintion.
-    index = (index == 111) ? 0 : (index + 1);
+    index = (index == 111 ) ? 0 : (index + 1);
     
     //TIMER_CMPA[0] = 10 * sine_tableA[index]; // Multiplied by 10 because of the timer resolution. The modulated wave is compited for a 1us res.PRD
     //TIMER_CMPA[1] = 10 * sine_tableB[index]; // so, the TIMER_PRD max is 555, an thus, the max of sinusoidal wave is TIMER_PRD/2. As we increase the
     //TIMER_CMPA[2] = 10 * sine_tableC[index]; // resolution, each tick counts 0.1us instead of 1us, so, TIMER_PRD become 5550, and if we keep same peak value for
                                                 //  the modulated sinusoid the result isn't right.
-
+    #ifndef INTERNAL_SINE
     TIMER_CMPA[0] = (int)(K_MOD * sine_tableA[index]);
     TIMER_CMPA[1] = (int)(K_MOD * sine_tableB[index]);
     TIMER_CMPA[2] = (int)(K_MOD * sine_tableC[index]);
+    #endif
+
+    #ifdef INTERNAL_SINE
+    TIMER_CMPA[0] = test_sine_tableA[index];
+    TIMER_CMPA[1] = test_sine_tableB[index];
+    TIMER_CMPA[2] = test_sine_tableC[index];
+    #endif
 
     update_duty_flag = 1;
 }
 
 void app_main(void)
 {
+    calc_update_loop_period(LINE_FREQ, NUMBER_OF_POINTS);
+
+    fill_sine_table(NUMBER_OF_POINTS);
+
     ESP_LOGI(TAG, "Create MCPWM timer: Period: %i us, Resolution: %i Hz", TIMER_PERIOD / 10, EXAMPLE_TIMER_RESOLUTION_HZ);
     mcpwm_timer_handle_t timer = NULL;
     mcpwm_timer_config_t timer_config = {
@@ -128,7 +156,9 @@ void app_main(void)
         ESP_ERROR_CHECK(mcpwm_new_comparator(operators[i], &compare_config, &comparators[i]));
         ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(comparators[i], 100));
     }
-
+    
+    //Revisar implementação do BRAKE, algo está resetando o PWM
+    /*
     ESP_LOGI(TAG, "Create over current fault detector");
     mcpwm_fault_handle_t over_cur_fault = NULL;
     mcpwm_gpio_fault_config_t gpio_fault_config = {
@@ -148,6 +178,7 @@ void app_main(void)
     for (int i = 0; i < 3; i++) {
         ESP_ERROR_CHECK(mcpwm_operator_set_brake_on_fault(operators[i], &brake_config));
     }
+    */
 
     ESP_LOGI(TAG, "Create PWM generators");
     mcpwm_gen_handle_t generators[3][2] = {};
@@ -178,14 +209,15 @@ void app_main(void)
         ESP_ERROR_CHECK(mcpwm_generator_set_actions_on_compare_event(generators[i][MCPWM_GEN_INDEX_HIGH],
                                                                      MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_DOWN, comparators[i], MCPWM_GEN_ACTION_LOW),
                                                                      MCPWM_GEN_COMPARE_EVENT_ACTION_END()));
+        /*
+        ESP_ERROR_CHECK(mcpwm_generator_set_actions_on_brake_event(generators[i][MCPWM_GEN_INDEX_HIGH],
+                                                                     MCPWM_GEN_BRAKE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_OPER_BRAKE_MODE_CBC, MCPWM_GEN_ACTION_LOW),
+                                                                     MCPWM_GEN_BRAKE_EVENT_ACTION_END()));
 
         ESP_ERROR_CHECK(mcpwm_generator_set_actions_on_brake_event(generators[i][MCPWM_GEN_INDEX_HIGH],
                                                                      MCPWM_GEN_BRAKE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_OPER_BRAKE_MODE_CBC, MCPWM_GEN_ACTION_LOW),
                                                                      MCPWM_GEN_BRAKE_EVENT_ACTION_END()));
-        ESP_ERROR_CHECK(mcpwm_generator_set_actions_on_brake_event(generators[i][MCPWM_GEN_INDEX_HIGH],
-                                                                     MCPWM_GEN_BRAKE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_OPER_BRAKE_MODE_CBC, MCPWM_GEN_ACTION_LOW),
-                                                                     MCPWM_GEN_BRAKE_EVENT_ACTION_END()));
-    
+        */
     }
 
     ESP_LOGI(TAG, "Setup deadtime: %i ns", CUSTOM_DEADTIME * 100);
@@ -215,12 +247,11 @@ void app_main(void)
         .arg = NULL,
         .name = "update_timer_cmpa_value"};
     esp_timer_handle_t update_timer_cmpa_timer = NULL;
+
     ESP_ERROR_CHECK(esp_timer_create(&periodic_timer_args, &update_timer_cmpa_timer));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(update_timer_cmpa_timer, update_prd_us));
 
-    ESP_ERROR_CHECK(esp_timer_start_periodic(update_timer_cmpa_timer, UPDATE_LOOP_PERIOD_US));
-    ESP_LOGI(TAG, "SPWM Update: Update CMPA value every, %i us", UPDATE_LOOP_PERIOD_US);
-
-    ESP_LOGI(TAG, "Start LED2 as GPIO for DEBUG");
+    ESP_LOGI(TAG, "SPWM Update: Update CMPA value every, %i us", update_prd_us);
 
     while (1)
     {
