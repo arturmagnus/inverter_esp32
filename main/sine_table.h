@@ -6,8 +6,7 @@
 
 const int tab_len = 111;
 
-//#define MOD_3RD_HARM 1
-//#define INTERNAL_SINE 1
+#define MOD_3RD_HARM 1
 
 int test_sine_tableA[NUMBER_OF_POINTS];
 int test_sine_tableB[NUMBER_OF_POINTS];

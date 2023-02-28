@@ -22,10 +22,13 @@
 #include "sine_table.h"
 
 //USER INPUTS: MODULATION INDEX, DEADTIME, MODULATED SIGNAL FREQUENCY AND NUMBER OF POINTS 
-#define CUSTOM_DEADTIME 5 // In TIMER_TICKS, 100 ns per tick
-#define DEFAULT_MF 30     // In *of LINE_FREQ   
+#define CUSTOM_DEADTIME 5                   // In TIMER_TICKS, 100 ns per tick
+#define DEFAULT_MF 60                       // In *of LINE_FREQ   
 #define LINE_FREQ 60                        // In Hz
-#define NUMBER_OF_POINTS 111
+#define NUMBER_OF_POINTS 111                //LENGHT OF SINE STRING, SHOULD MATCH SIGNAL FREQUENCY
+#define MODULATION_INDEX_M1 1.15    
+#define MODULATION_INDEX_M3 0.22
+#define INTERNAL_SINE 1
 
 #define EXAMPLE_TIMER_RESOLUTION_HZ 10000000 // 10MHz, 0.1us per TIMER_TICK
 #define DEFAULT_FS (LINE_FREQ * DEFAULT_MF) // In Hz
@@ -80,12 +83,24 @@ static void calc_update_loop_period(int frequency, int number_of_points){
 static void fill_sine_table(int number_of_points){
     //local index
     int index = 0;
+    #ifndef MOD_3RD_HARM
     for(index=0; index<number_of_points; index++){
         test_sine_tableA[index]=(int)(K_MOD*100*(1+sin((_2PI/number_of_points)*index)));
         test_sine_tableB[index]=(int)(K_MOD*100*(1+sin((_2PI/number_of_points)*index-2.094395102)));
         test_sine_tableC[index]=(int)(K_MOD*100*(1+sin((_2PI/number_of_points)*index+2.094395102)));
         ESP_LOGI(TAG, "Sine table point number %i\n absolute value: %i ",index, test_sine_tableA[index]);
     }
+    #endif
+
+    #ifdef MOD_3RD_HARM
+        for(index=0; index<number_of_points; index++){
+        test_sine_tableA[index]=(int)(K_MOD*100*(1+(MODULATION_INDEX_M3*(sin((_2PI/number_of_points)*3*index)) + MODULATION_INDEX_M1*(sin((_2PI/number_of_points)*index)))));
+        test_sine_tableB[index]=(int)(K_MOD*100*(1+(MODULATION_INDEX_M3*(sin((_2PI/number_of_points)*3*index)) + MODULATION_INDEX_M1*(sin((_2PI/number_of_points)*index-2.094395102)))));
+        test_sine_tableC[index]=(int)(K_MOD*100*(1+(MODULATION_INDEX_M3*(sin((_2PI/number_of_points)*3*index)) + MODULATION_INDEX_M1*(sin((_2PI/number_of_points)*index+2.094395102)))));
+        ESP_LOGI(TAG, "Sine table point number %i\n absolute value: %i ",index, test_sine_tableA[index]);
+    }
+    #endif
+
 }
 
 static void mcpwm_update_TIMER_CMPA(void *args)
