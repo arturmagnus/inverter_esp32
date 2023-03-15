@@ -23,7 +23,7 @@
 
 //USER INPUTS: MODULATION INDEX, DEADTIME, MODULATED SIGNAL FREQUENCY AND NUMBER OF POINTS 
 #define CUSTOM_DEADTIME 5                   // In TIMER_TICKS, 100 ns per tick
-#define DEFAULT_MF 60                       // In *of LINE_FREQ   
+#define DEFAULT_MF 150                       // In *of LINE_FREQ   
 #define LINE_FREQ 60                        // In Hz
 #define NUMBER_OF_POINTS 111                //LENGHT OF SINE STRING, SHOULD MATCH SIGNAL FREQUENCY
 #define MODULATION_INDEX_M1 1.15    
